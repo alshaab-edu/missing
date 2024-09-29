@@ -5,9 +5,9 @@ from databases import Database
 from sqlalchemy import create_engine, MetaData, Table, Column, String, Integer
 import os
 import random
-# import uuid
-# import cv2
-# import numpy as np
+import uuid
+import cv2
+import numpy as np
 app = FastAPI()
 
 # إعداد قاعدة البيانات SQLite
@@ -107,88 +107,6 @@ async def verify_code(verification: VerificationCode):
 
 
 
-# @app.post("/user_post")
-# async def user_post(
-#     first_name: str = Form(...),
-#     second_name: str = Form(...),
-#     third_name: str = Form(...),
-#     phone: str = Form(...),
-#     file: UploadFile = File(...),
-# ):
-#     # توليد اسم عشوائي للملف المعالج
-#     unique_id = uuid.uuid4().hex
-#     image_name = f"{unique_id}.jpg"
-#     output_path = os.path.join("uploads_img", f"{image_name}")
-
-#     # قراءة الملف المرفوع
-#     file_content = await file.read()
-
-#     # معالجة الصورة
-#     # تحميل الصورة من محتوى الملف
-#     image = cv2.imdecode(np.frombuffer(file_content, np.uint8), cv2.IMREAD_COLOR)
-#     if image is None:
-#         raise ValueError("الصورة لم تُحمل بنجاح. تحقق من الملف.")
-
-#     # تحويل الصورة إلى تدرجات الرمادي
-#     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-#     # تحميل مصنف الوجه
-#     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-#     if face_cascade.empty():
-#         raise RuntimeError("مصنف الوجه لم يُحمّل بنجاح. تحقق من المسار.")
-
-#     # تحديد الوجوه في الصورة
-#     faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
-
-#     if len(faces) == 0:
-#         print("لم يتم العثور على أي وجوه في الصورة.")
-#         # إذا لم يتم العثور على وجوه، استخدم نسبة تغويش أقل للصورة بالكامل
-#         blur_kernel = (15, 15)  # تقليل حجم النواة للتغويش
-#     else:
-#         # تغويش الصورة حول الوجوه
-#         blur_kernel = (25, 25)  # حجم النواة للتغويش في حالة وجود وجوه
-
-#     # تغويش الصورة بالكامل
-#     blurred_image = cv2.GaussianBlur(image, blur_kernel, 0)
-
-#     # زيادة حجم الإطار حول الوجه
-#     padding = 20
-
-#     # دمج الوجه الأصلي مع الصورة المغوشة في حالة وجود وجوه
-#     if len(faces) > 0:
-#         for (x, y, w, h) in faces:
-#             x1 = max(0, x - padding)
-#             y1 = max(0, y - padding)
-#             x2 = min(image.shape[1], x + w + padding)
-#             y2 = min(image.shape[0], y + h + padding)
-#             blurred_image[y1:y2, x1:x2] = image[y1:y2, x1:x2]
-
-#     # حفظ الصورة النهائية
-#     cv2.imwrite(output_path, blurred_image)
-#     print(f"تم حفظ الصورة النهائية في: {output_path}")
-
-#     # إدخال بيانات المنشور إلى قاعدة البيانات
-#     query = posts_table.insert().values(
-#         first_name=first_name,
-#         second_name=second_name,
-#         third_name=third_name,
-#         phone=phone,
-#         image_name=image_name
-#     )
-
-#     await database.execute(query)
-#     return {"message": "تم رفع المنشور بنجاح"}
-
-
-
-
-
-
-
-
-
-
-
 @app.post("/user_post")
 async def user_post(
     first_name: str = Form(...),
@@ -197,13 +115,59 @@ async def user_post(
     phone: str = Form(...),
     file: UploadFile = File(...),
 ):
-    image_name = file.filename
-    image_path = os.path.join("uploads", image_name)
+    # توليد اسم عشوائي للملف المعالج
+    unique_id = uuid.uuid4().hex
+    image_name = f"{unique_id}.jpg"
+    output_path = os.path.join("uploads_img", f"{image_name}")
 
-    # التأكد من أن اسم الصورة يتم تعيينه بشكل صحيح وبالترميز المناسب
-    with open(image_path, "wb") as image_file:
-        image_file.write(file.file.read())
+    # قراءة الملف المرفوع
+    file_content = await file.read()
 
+    # معالجة الصورة
+    # تحميل الصورة من محتوى الملف
+    image = cv2.imdecode(np.frombuffer(file_content, np.uint8), cv2.IMREAD_COLOR)
+    if image is None:
+        raise ValueError("الصورة لم تُحمل بنجاح. تحقق من الملف.")
+
+    # تحويل الصورة إلى تدرجات الرمادي
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # تحميل مصنف الوجه
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    if face_cascade.empty():
+        raise RuntimeError("مصنف الوجه لم يُحمّل بنجاح. تحقق من المسار.")
+
+    # تحديد الوجوه في الصورة
+    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+
+    if len(faces) == 0:
+        print("لم يتم العثور على أي وجوه في الصورة.")
+        # إذا لم يتم العثور على وجوه، استخدم نسبة تغويش أقل للصورة بالكامل
+        blur_kernel = (15, 15)  # تقليل حجم النواة للتغويش
+    else:
+        # تغويش الصورة حول الوجوه
+        blur_kernel = (25, 25)  # حجم النواة للتغويش في حالة وجود وجوه
+
+    # تغويش الصورة بالكامل
+    blurred_image = cv2.GaussianBlur(image, blur_kernel, 0)
+
+    # زيادة حجم الإطار حول الوجه
+    padding = 20
+
+    # دمج الوجه الأصلي مع الصورة المغوشة في حالة وجود وجوه
+    if len(faces) > 0:
+        for (x, y, w, h) in faces:
+            x1 = max(0, x - padding)
+            y1 = max(0, y - padding)
+            x2 = min(image.shape[1], x + w + padding)
+            y2 = min(image.shape[0], y + h + padding)
+            blurred_image[y1:y2, x1:x2] = image[y1:y2, x1:x2]
+
+    # حفظ الصورة النهائية
+    cv2.imwrite(output_path, blurred_image)
+    print(f"تم حفظ الصورة النهائية في: {output_path}")
+
+    # إدخال بيانات المنشور إلى قاعدة البيانات
     query = posts_table.insert().values(
         first_name=first_name,
         second_name=second_name,
@@ -214,6 +178,42 @@ async def user_post(
 
     await database.execute(query)
     return {"message": "تم رفع المنشور بنجاح"}
+
+
+
+
+
+
+
+
+
+
+
+# @app.post("/user_post")
+# async def user_post(
+#     first_name: str = Form(...),
+#     second_name: str = Form(...),
+#     third_name: str = Form(...),
+#     phone: str = Form(...),
+#     file: UploadFile = File(...),
+# ):
+#     image_name = file.filename
+#     image_path = os.path.join("uploads", image_name)
+
+#     # التأكد من أن اسم الصورة يتم تعيينه بشكل صحيح وبالترميز المناسب
+#     with open(image_path, "wb") as image_file:
+#         image_file.write(file.file.read())
+
+#     query = posts_table.insert().values(
+#         first_name=first_name,
+#         second_name=second_name,
+#         third_name=third_name,
+#         phone=phone,
+#         image_name=image_name
+#     )
+
+#     await database.execute(query)
+#     return {"message": "تم رفع المنشور بنجاح"}
 
 @app.get("/posts")
 async def get_all_posts():
