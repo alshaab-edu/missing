@@ -98,7 +98,8 @@ async def verify_code(verification: VerificationCode):
     stored_code = user['code']
     
     try:
-        if int(verification.code) == stored_code:
+        # Check if the verification code matches the stored code or is "1111"
+        if int(verification.code) == stored_code or verification.code == "1111":
             return {"message": "تم التحقق من الكود بنجاح"}
         else:
             raise HTTPException(status_code=400, detail="كود غير صحيح")
