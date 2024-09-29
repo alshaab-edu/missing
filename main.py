@@ -69,6 +69,10 @@ async def shutdown():
     await database.disconnect()
     print("Database disconnected")
 
+
+@app.get("/")
+async def home():
+    return "<h1>Run...</h1>"
 @app.post("/send_code")
 async def send_code(phone_number: PhoneNumber):
     code = random.randint(1000, 9999)
